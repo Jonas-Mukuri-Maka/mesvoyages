@@ -7,12 +7,13 @@
 
 namespace App\Controller\admin;
 
+use App\Entity\Visite;
 use App\Repository\VisiteRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\Visite;
+use App\Form\VisiteType;
 
 /**
  * Description of AdminVoyagesController
@@ -31,6 +32,37 @@ class AdminVoyagesController extends AbstractController {
         $visites = $this->repository->findAllOrderBy('datecreation', 'DESC');
         return $this->render("admin/admin.voyages.html.twig", 
             ['visites' => $visites
+        ]);
+    }
+    
+    /**
+     * @Route("/admin/suppr/{id}", name="admin.voyage.suppr")
+     * @param Visite $visite
+     * @return Response
+     */
+    public function suppr(Visite $visite) : Response{
+        $this->repository->remove($visite, true);
+        return $this->redirectToRoute('admin.voyages');
+    }
+    
+    /**
+     * @Route("/admin/edit/{id}", name="admin.voyage.edit")
+     * @param Visite $visite
+     * @param Request $request
+     * @return Response
+     */
+    public function edit(Visite $visite, Request $request) : Response {
+        $formVisite = $this->createForm(VisiteType::class, $visite);
+        
+        $formVisite->handleRequest($request);
+        if($formVisite->isSubmitted() && $formVisite->isValid()){
+            $this->repository->add($visite, true);
+            return $this->redirectToRoute('admin.voyages');
+        }
+        
+        return $this->render("admin/admin.voyage.edit.html.twig", 
+            ['visite' => $visite,
+            'formvisite' => $formVisite->createView()
         ]);
     }
     
@@ -87,16 +119,6 @@ class AdminVoyagesController extends AbstractController {
         return $this->render("pages/voyage.html.twig",
             ['visite' => $visite
         ]);
-    }
-    
-    /**
-     * @Route("/admin/suppr/{id}", name="admin.voyage.suppr")
-     * @param Visite $visite
-     * @return Response
-     */
-    public function suppr(Visite $visite) : Response{
-        $this->repository->remove($visite, true);
-        return $this->redirectToRoute('admin.voyages');
     }
     
     
